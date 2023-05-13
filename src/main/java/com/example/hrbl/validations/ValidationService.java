@@ -1,6 +1,7 @@
 package com.example.hrbl.validations;
 
 import com.example.hrbl.dto.BookingRequestDTO;
+import com.example.hrbl.dto.BookingSearchDTO;
 import com.example.hrbl.enums.MeetingRoom;
 import com.example.hrbl.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
@@ -8,11 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,7 +21,7 @@ public class ValidationService {
 
     private final CommonUtils commonUtils;
 
-    public Set<String> validateBookingRequest(BookingRequestDTO bookingRequestDTO) {
+    public Set<String> validateBookingRequestDTO(BookingRequestDTO bookingRequestDTO) {
         Set<String> errorMessages = new HashSet<>();
         validateEmail(bookingRequestDTO.getEmail(), errorMessages);
         validateDate(bookingRequestDTO.getDate(), errorMessages);
@@ -34,8 +31,15 @@ public class ValidationService {
         validateTimeSlots(bookingRequestDTO, errorMessages);
         validateDateAndTimeFromNotExistInThePast(bookingRequestDTO.getDate(), bookingRequestDTO.getTimeFrom(), errorMessages);
         return errorMessages;
-
     }
+
+    public Set<String> validateBookingSearchDTO(BookingSearchDTO bookingSearchDTO) {
+        Set<String> errorMessages = new HashSet<>();
+        validateMeetingRoom(bookingSearchDTO.getRoom(), errorMessages);
+        validateDate(bookingSearchDTO.getDate(), errorMessages );
+        return errorMessages;
+    }
+
 
     public void validateEmail(String email, Set<String> errorMessages) {
         if (StringUtils.isBlank(email)) {
@@ -46,8 +50,9 @@ public class ValidationService {
     public void validateDate(String dateString, Set<String> errorMessages) {
         if (StringUtils.isNotBlank(dateString)) {
             try {
-                new SimpleDateFormat("dd/MM/yyyy").parse(dateString);
-            } catch (ParseException e) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                LocalDate.parse(dateString, formatter);
+            } catch (DateTimeException e) {
                 errorMessages.add("Date must be in the format dd/MM/yyyy");
             }
         } else {
@@ -116,4 +121,6 @@ public class ValidationService {
            log.error("Unable to validate date and time from existing in the past");
         }
     }
+
+
 }

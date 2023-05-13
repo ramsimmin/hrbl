@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
-        List<Booking> findAllByRoomAndTimeFromGreaterThanEqualAndTimeToLessThanEqual(String room, LocalDateTime start, LocalDateTime end);
-        List<Booking> findAllByOrderByTimeFromAscTimeFromAsc();
+        List<Booking> findAllByRoomAndTimeFromGreaterThanEqualAndTimeToLessThanEqualOrderByTimeFromAscTimeFromAsc(String room, LocalDateTime start, LocalDateTime end);
+//        List<Booking> findAllByOrderByTimeFromAscTimeFromAsc();
  }
+

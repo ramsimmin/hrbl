@@ -1,6 +1,7 @@
 package com.example.hrbl.controllers;
 
 import com.example.hrbl.dto.BookingRequestDTO;
+import com.example.hrbl.dto.BookingSearchDTO;
 import com.example.hrbl.services.BookingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +17,8 @@ public class BookingController {
     private final BookingService bookingService;
 
     @GetMapping(value = "/bookings", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getBookings() {
-        return ResponseEntity.ok(bookingService.getBookings());
+    public ResponseEntity<?> getBookings(@RequestBody BookingSearchDTO bookingSearchDTO) {
+        return bookingService.getBookingsByRoomAndDate(bookingSearchDTO);
     }
 
     @PostMapping(value = "/book", produces = MediaType.APPLICATION_JSON_VALUE)

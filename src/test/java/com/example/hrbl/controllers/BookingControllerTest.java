@@ -1,6 +1,7 @@
 package com.example.hrbl.controllers;
 
-import com.example.hrbl.dto.BookingDTO;
+import com.example.hrbl.dto.BookingSearchDTO;
+import com.example.hrbl.dto.BookingSearchResultDTO;
 import com.example.hrbl.dto.BookingRequestDTO;
 import com.example.hrbl.dto.ResponseDTO;
 import com.example.hrbl.repository.BookingRepository;
@@ -44,12 +45,15 @@ class BookingControllerTest {
     @BeforeAll
     void bookMeeting() throws Exception {
         String requestBody = mapper.writeValueAsString(BookingRequestDTO.builder().email("email").room("alpha room").date("14/05/2024").timeFrom("10:00").timeTo("11:00").build());
-        mockMvc.perform(post("/book")
+        MvcResult mvcResult = mockMvc.perform(post("/book")
                         .content(requestBody)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
 
+        String response = mvcResult.getResponse().getContentAsString();
+        ResponseDTO responseDTO = mapper.readValue(response, ResponseDTO.class);
+        bookingId = responseDTO.getBookingId();
     }
 
     @Test
@@ -74,13 +78,16 @@ class BookingControllerTest {
     @Test
     @Order(2)
     void getBookings() throws Exception {
+        String requestBody = mapper.writeValueAsString(BookingSearchDTO.builder().room("alpha room").date("14/05/2024").build());
+
         MvcResult mvcResult = mockMvc.perform(get("/bookings")
+                        .content(requestBody)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
                 .andReturn();
 
         String response = mvcResult.getResponse().getContentAsString();
-        List<BookingDTO> responseList = mapper.readValue(response, new TypeReference<>() {});
+        List<BookingSearchResultDTO> responseList = mapper.readValue(response, new TypeReference<>() {});
         Assertions.assertAll(
                 () -> assertTrue(responseList.size() ==1, "Bookings list size must be 1"),
                 () -> assertEquals("14/05/2024", responseList.get(0).getDate(), "Date does not match"),
@@ -88,7 +95,6 @@ class BookingControllerTest {
                 () -> assertEquals("11:00", responseList.get(0).getTimeTo(), "Time to does not match")
         );
 
-        bookingId = responseList.get(0).getId();
     }
 
 

@@ -1,6 +1,7 @@
 package com.example.hrbl.mapper;
 
-import com.example.hrbl.dto.BookingDTO;
+import com.example.hrbl.dto.BookingRequestDTO;
+import com.example.hrbl.dto.BookingSearchResultDTO;
 import com.example.hrbl.entity.Booking;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
@@ -14,14 +15,13 @@ import java.util.UUID;
 
 @Mapper(componentModel = "spring", injectionStrategy = InjectionStrategy.CONSTRUCTOR)
 public interface BookingMapper {
-    List<BookingDTO> entitiesToDtos(List<Booking> bookings);
+    List<BookingSearchResultDTO> entitiesToDtos(List<Booking> bookings);
 
     @Mapping(target = "id",  qualifiedByName = "uuidToString")
     @Mapping(source = "timeFrom", target = "date", qualifiedByName = "dateToString")
     @Mapping(source = "timeFrom", target = "timeFrom",  qualifiedByName = "timeToString")
     @Mapping(source = "timeTo", target = "timeTo",  qualifiedByName = "timeToString")
-    BookingDTO entityToDto(Booking booking);
-
+    BookingSearchResultDTO entityToDto(Booking booking);
 
     @Named("uuidToString")
     default String uuidToStringConverter(UUID uuid) {

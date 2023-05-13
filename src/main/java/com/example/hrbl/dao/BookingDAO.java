@@ -1,12 +1,13 @@
 package com.example.hrbl.dao;
 
-import com.example.hrbl.dto.BookingDTO;
+import com.example.hrbl.dto.BookingSearchResultDTO;
 import com.example.hrbl.dto.BookingRequestDTO;
 import com.example.hrbl.dto.ResponseDTO;
 import com.example.hrbl.entity.Booking;
 import com.example.hrbl.mapper.BookingMapper;
 import com.example.hrbl.repository.BookingRepository;
 import com.example.hrbl.utils.CommonUtils;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,26 +27,31 @@ public class BookingDAO {
     private final BookingMapper bookingMapper;
     private final CommonUtils commonUtils;
 
-    public ResponseDTO save(BookingRequestDTO bookingRequestDTO) {
+    @Transactional
+    public ResponseDTO save(BookingRequestDTO bookingRequestDTO)  {
         ResponseDTO responseDTO = new ResponseDTO();
+        Booking bookingEntity = new Booking();
+        bookingEntity.setId(UUID.randomUUID());
+        bookingEntity.setEmail(bookingRequestDTO.getEmail());
+        bookingEntity.setRoom(bookingRequestDTO.getRoom());
         try {
-            Booking bookingEntity = new Booking();
-            bookingEntity.setId(UUID.randomUUID());
-            bookingEntity.setEmail(bookingRequestDTO.getEmail());
-            bookingEntity.setRoom(bookingRequestDTO.getRoom());
             bookingEntity.setTimeFrom(commonUtils.getLocalDateTimeFromString(bookingRequestDTO.getDate(), bookingRequestDTO.getTimeFrom()));
             bookingEntity.setTimeTo(commonUtils.getLocalDateTimeFromString(bookingRequestDTO.getDate(), bookingRequestDTO.getTimeTo()));
-            bookingRepository.save(bookingEntity);
-
-        } catch (Exception e) {
-            responseDTO.setErrorMessages(Set.of("Unable to book meeting room: " + e.getMessage()));
+            Booking savedEntity = bookingRepository.save(bookingEntity);
+            responseDTO.setBookingId(savedEntity.getId().toString());
+        } catch (ParseException e) {
+            responseDTO.setErrorMessages(Set.of("Unable to save booking"));
+            return responseDTO;
         }
         return responseDTO;
     }
 
 
-    public List<BookingDTO> getBookings() {
-        return bookingMapper.entitiesToDtos(bookingRepository.findAllByOrderByTimeFromAscTimeFromAsc());
+    public List<BookingSearchResultDTO> getBookingsByRoomAndDate(String dateString, String room) {
+        LocalDateTime dateStart = getStartOfDateAsLocalDateTime(dateString);
+        LocalDateTime dateEnd = getEndOfDateAsLocalDateTime(dateString);
+
+        return bookingMapper.entitiesToDtos(bookingRepository.findAllByRoomAndTimeFromGreaterThanEqualAndTimeToLessThanEqualOrderByTimeFromAscTimeFromAsc(room, dateStart, dateEnd));
     }
 
     public boolean slotIsFree(BookingRequestDTO bookingRequestDTO) {
@@ -53,10 +59,9 @@ public class BookingDAO {
             LocalDateTime ldtFrom = commonUtils.getLocalDateTimeFromString(bookingRequestDTO.getDate(), bookingRequestDTO.getTimeFrom());
             LocalDateTime ldtTo = commonUtils.getLocalDateTimeFromString(bookingRequestDTO.getDate(), bookingRequestDTO.getTimeTo());
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDateTime dateStart = LocalDate.parse(bookingRequestDTO.getDate(), formatter).atTime(0, 0);
-            LocalDateTime dateEnd = LocalDate.parse(bookingRequestDTO.getDate(), formatter).atTime(23, 59);
-            List<Booking> bookings = bookingRepository.findAllByRoomAndTimeFromGreaterThanEqualAndTimeToLessThanEqual(bookingRequestDTO.getRoom(), dateStart, dateEnd);
+            LocalDateTime dateStart = getStartOfDateAsLocalDateTime(bookingRequestDTO.getDate());
+            LocalDateTime dateEnd = getEndOfDateAsLocalDateTime(bookingRequestDTO.getDate());
+            List<Booking> bookings = bookingRepository.findAllByRoomAndTimeFromGreaterThanEqualAndTimeToLessThanEqualOrderByTimeFromAscTimeFromAsc(bookingRequestDTO.getRoom(), dateStart, dateEnd);
 
             List<Booking> overlappingBookings = new ArrayList<>();
 
@@ -71,9 +76,17 @@ public class BookingDAO {
             log.error("Unable to check overlapping slots " + e.getMessage());
             return false;
         }
-
     }
 
+    public LocalDateTime getStartOfDateAsLocalDateTime(String dateString) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return LocalDate.parse(dateString, formatter).atTime(0, 0);
+    }
+
+    public LocalDateTime getEndOfDateAsLocalDateTime(String dateString) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return LocalDate.parse(dateString, formatter).atTime(23, 59);
+    }
 
     public ResponseDTO delete(String bookingId) {
         ResponseDTO responseDTO = new ResponseDTO();
@@ -90,7 +103,6 @@ public class BookingDAO {
                 responseDTO.setErrorMessages(Set.of("The given booking id does not exist"));
                 return responseDTO;
             }
-
         } catch (Exception e) {
             responseDTO.setErrorMessages(Set.of("Unable to delete meeting: " + e.getMessage()));
             return responseDTO;

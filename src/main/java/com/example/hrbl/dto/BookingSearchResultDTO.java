@@ -9,10 +9,9 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class BookingDTO {
+public class BookingSearchResultDTO {
     private String id;
     private String email;
-    private String room;
     private String date;
     private String timeFrom;
     private String timeTo;

@@ -1,14 +1,13 @@
 package com.example.hrbl.validations;
 
 import com.example.hrbl.dto.BookingRequestDTO;
+import com.example.hrbl.dto.BookingSearchDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class ValidationServiceTest {
@@ -18,17 +17,24 @@ class ValidationServiceTest {
 
 
     @Test
-    void testValidBookingRequest() {
+    void testValidBookingRequestDTO() {
         BookingRequestDTO bookingRequestDTO = BookingRequestDTO.builder().email("email").room("alpha room").date("14/05/2024").timeFrom("10:00").timeTo("11:00").build();
-        Set<String> errors = validationService.validateBookingRequest(bookingRequestDTO);
-
+        Set<String> errors = validationService.validateBookingRequestDTO(bookingRequestDTO);
         Assertions.assertTrue(errors.isEmpty());
     }
 
     @Test
+    void testValidBookingSearchDTO() {
+        BookingSearchDTO bookingSearchDTO = BookingSearchDTO.builder().room("alpha room").date("14/05/2024").build();
+        Set<String> errors = validationService.validateBookingSearchDTO(bookingSearchDTO);
+        Assertions.assertTrue(errors.isEmpty());
+    }
+
+
+    @Test
     void testBookingRequestMissingMandatoryProps() {
         BookingRequestDTO bookingRequestDTO = BookingRequestDTO.builder().build();
-        Set<String> errors = validationService.validateBookingRequest(bookingRequestDTO);
+        Set<String> errors = validationService.validateBookingRequestDTO(bookingRequestDTO);
 
         Set<String> expectedErrors = Set.of(
                 "Email is mandatory",
@@ -44,7 +50,7 @@ class ValidationServiceTest {
     @Test
     void testBookingRequestBlankMandatoryProps() {
         BookingRequestDTO bookingRequestDTO = BookingRequestDTO.builder().email(" ").room("").date("").timeFrom(" ").timeTo("  ").build();
-        Set<String> errors = validationService.validateBookingRequest(bookingRequestDTO);
+        Set<String> errors = validationService.validateBookingRequestDTO(bookingRequestDTO);
 
         Set<String> expectedErrors = Set.of(
                 "Email is mandatory",
@@ -60,7 +66,7 @@ class ValidationServiceTest {
     @Test
     void testBookingRequestBlankInvalidDates() {
         BookingRequestDTO bookingRequestDTO = BookingRequestDTO.builder().email("email").room("alpha room").date("x").timeFrom("x").timeTo("x").build();
-        Set<String> errors = validationService.validateBookingRequest(bookingRequestDTO);
+        Set<String> errors = validationService.validateBookingRequestDTO(bookingRequestDTO);
 
         Set<String> expectedErrors = Set.of(
                 "Date must be in the format dd/MM/yyyy",
@@ -73,7 +79,7 @@ class ValidationServiceTest {
     @Test
     void testBookingRequestDateInThePast() {
         BookingRequestDTO bookingRequestDTO = BookingRequestDTO.builder().email("email").room("alpha room").date("13/05/2020").timeFrom("10:00").timeTo("11:00").build();
-        Set<String> errors = validationService.validateBookingRequest(bookingRequestDTO);
+        Set<String> errors = validationService.validateBookingRequestDTO(bookingRequestDTO);
 
         Set<String> expectedErrors = Set.of(
                 "Date cannot be in the past"
@@ -85,7 +91,7 @@ class ValidationServiceTest {
     @Test
     void testBookingRequestTimeSlotsNotOneHour() {
         BookingRequestDTO bookingRequestDTO = BookingRequestDTO.builder().email("email").room("alpha room").date("13/05/2024").timeFrom("10:30").timeTo("11:00").build();
-        Set<String> errors = validationService.validateBookingRequest(bookingRequestDTO);
+        Set<String> errors = validationService.validateBookingRequestDTO(bookingRequestDTO);
 
         Set<String> expectedErrors = Set.of(
                 "A room can be booked for at least 1 hour or consecutive multiples of 1 hour"
@@ -97,7 +103,7 @@ class ValidationServiceTest {
     @Test
     void testBookingRequestTimeToLessThanTimeFrom() {
         BookingRequestDTO bookingRequestDTO = BookingRequestDTO.builder().email("email").room("alpha room").date("13/05/2024").timeFrom("12:00").timeTo("11:00").build();
-        Set<String> errors = validationService.validateBookingRequest(bookingRequestDTO);
+        Set<String> errors = validationService.validateBookingRequestDTO(bookingRequestDTO);
 
         Set<String> expectedErrors = Set.of(
                 "Time to must be greater than time from"
@@ -109,7 +115,7 @@ class ValidationServiceTest {
     @Test
     void testBookingRequestInvalidRoom() {
         BookingRequestDTO bookingRequestDTO = BookingRequestDTO.builder().email("email").room("xx").date("13/05/2024").timeFrom("10:00").timeTo("11:00").build();
-        Set<String> errors = validationService.validateBookingRequest(bookingRequestDTO);
+        Set<String> errors = validationService.validateBookingRequestDTO(bookingRequestDTO);
 
         Set<String> expectedErrors = Set.of(
                 "Room must be one of [main conference room, alpha room, beta room]"
