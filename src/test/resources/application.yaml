@@ -1,0 +1,15 @@
+
+spring:
+  h2:
+    console:
+      enabled: 'true'
+  datasource:
+    driverClassName: org.h2.Driver
+    username: sa
+    password: sa
+    url: jdbc:h2:./h2/hrbl-test-db;
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+
