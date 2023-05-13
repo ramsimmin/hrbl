@@ -36,8 +36,8 @@ You can change the location of the file as well as the database credentials conf
 `spring.datasource.username=sa`  
 `spring.datasource.password=sa`
 
-You can view the database while the application is running,  by accessing:
-http://localhost:<port>/h2-console
+You can view the database while the application is running,  by accessing:  
+`http://localhost:<port>/h2-console`
 
 
 
